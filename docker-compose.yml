@@ -16,9 +16,14 @@ services:
             - MONGO_HOSTNAME=mongo
             - SECRET_FOR_GENERATE_TOKEN=mysupersecret
             - SECRET_FOR_CRYPT_PASSWORDS=anothermysupersecret
+        restart: always
+        depends_on:
+            - mongo
+            - redis
     
     redis:
         image: "redis:alpine"
+        restart: always
 
     nginx:
         image: "nginx"
@@ -27,7 +32,10 @@ services:
         volumes:
             - ./nginx.prod.conf:/etc/nginx/conf.d/nginx.prod.conf
             - ./frontend/html:/html
-                 
+        restart: always
+        depends_on:
+            - backend
+                     
     mongo:
         build: db/.
         environment:
@@ -36,4 +44,5 @@ services:
             - MONGO_INITDB_DATABASE=devman
         volumes:
             - db:/data/db
+            restart: always
     

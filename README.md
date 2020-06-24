@@ -4,4 +4,4 @@ Structure:
 - backend: Rest API server on Python (aiohtpp)
 - database: MongoDB
 - cache: Redis
-- frontend: Vue.js (already generated code)
+- frontend: SPA (Vue.js)
