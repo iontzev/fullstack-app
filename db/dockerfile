@@ -1,0 +1,5 @@
+FROM mongo
+
+# copy scripts for create user and add sample data
+COPY init.js /docker-entrypoint-initdb.d/
+

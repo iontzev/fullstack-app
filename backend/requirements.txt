@@ -1,0 +1,8 @@
+aiohttp
+aioreloader
+aiohttp_session
+aiohttp_security
+aiohttp_jwt
+aioredis
+motor
+rncryptor

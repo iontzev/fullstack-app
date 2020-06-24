@@ -1,0 +1,39 @@
+version: '3'
+
+volumes:
+    db:
+  
+services:
+
+    backend:
+        build: backend/.
+        volumes:
+            - ./backend/code:/code
+        environment:
+            - MONGO_USERNAME=devman
+            - MONGO_PASSWORD=devman
+            - MONGO_DATABASE=devman
+            - MONGO_HOSTNAME=mongo
+            - SECRET_FOR_GENERATE_TOKEN=mysupersecret
+            - SECRET_FOR_CRYPT_PASSWORDS=anothermysupersecret
+    
+    redis:
+        image: "redis:alpine"
+
+    nginx:
+        image: "nginx"
+        ports:
+            - "5000:5000"
+        volumes:
+            - ./nginx.prod.conf:/etc/nginx/conf.d/nginx.prod.conf
+            - ./frontend/html:/html
+                 
+    mongo:
+        build: db/.
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=dbadmin
+            - MONGO_INITDB_ROOT_PASSWORD=somepassword
+            - MONGO_INITDB_DATABASE=devman
+        volumes:
+            - db:/data/db
+    
