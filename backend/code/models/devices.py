@@ -31,9 +31,23 @@ class DeviceDB():
         except:
             return {'status': 'error', 'error': 'Failed to get item info'}
 
+    async def item_by_name(self, name):
+        try:
+            document = await self.collection.find_one(
+                {'name': name},
+                {
+                    'management.snmp_read_community': False,
+                    'management.cli_password': False,
+                    'management.cli_enable_password': False,
+                })
+            return {'status': 'success', 'data': document}
+        except:
+            return {'status': 'error', 'error': 'Failed to get item info'}
+
+
     async def insert(self, data):
         data.pop('_id', None)
-        data = self.encrypt_passwords(data)
+        #data = self.encrypt_passwords(data)
         try:
             result = await self.collection.insert_one(data)
             if result.inserted_id != None:
@@ -45,7 +59,7 @@ class DeviceDB():
     
     async def update(self, item_id, data):
         data.pop('_id', None)
-        data = self.encrypt_passwords(data)
+        #data = self.encrypt_passwords(data)
         try:
             result = await self.collection.update_one({'_id': ObjectId(item_id)}, {'$set': data})
             if result.matched_count > 0:
@@ -59,6 +73,13 @@ class DeviceDB():
         result = await self.collection.delete_many({'_id': ObjectId(item_id)})
         if result.deleted_count > 0:
             return {"status": "success"}
+        else:
+            return {"status": "error"}
+
+    async def delete_all(self):
+        result = await self.collection.delete_many({})
+        if result.deleted_count > 0:
+            return {"status": "success", "data": result.deleted_count}
         else:
             return {"status": "error"}
 

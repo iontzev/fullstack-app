@@ -1,39 +1,64 @@
 from bson.objectid import ObjectId
+import json
 import re
 
-class DeviceDB():
-    def __init__(self, db, **kwargs):
-        self.collection = db['devices']
+from models.devices import DeviceDB
 
-    async def item(self, name):
-        document = await self.collection.find_one({'name': name})
-        return document
+class ActionsModel():
+    def __init__(self, app, **kwargs):
+        self.app = app
+        self.base = DeviceDB(self.app.db)
 
-    async def insert(self, data):
-        result = await self.collection.insert_one(data)
-        if result.inserted_id != None:
-            data = {"result": "success", "message": "Record successfully added"}
+    async def import_json(self, json_data):
+        results = []
+        # check for settings in json data
+        settings = json_data.get('settings', {})
+        replace_items = settings.get('replace_item_with_same_name', False)
+        delete_all_items = settings.get('delete_all_items_before_upload', False)
+        
+        if delete_all_items:
+            result = await self.base.delete_all()
+            if result.get('status') == 'success':
+                results.append(f'Deleted all ({result.get("data")}) records')
+        
+        default_device = json_data.get('default_device', {})
+        devices = json_data.get('devices', [])
+        for item in devices:
+            device = self.rec_merge(item, default_device)
+            name = device.get('name')
+            if name is None:
+                results.append('Device name is missing')
+            else:
+                result = await self.base.item_by_name(name)
+                exist_item = None
+                if result.get('status') == 'success':
+                    exist_item = result.get('data')
+                if exist_item is None:
+                    result = await self.base.insert(device)
+                    if result.get('status') == 'success':
+                        results.append(f'Added device {name}')
+                    else:
+                        results.append(f'Can\'t add device {name} - {result.get("error")}')
+
+                else:
+                    if replace_items:
+                        result = await self.base.update(exist_item.get('_id'), device)
+                        if result.get('status') == 'success':
+                            results.append('Updated device ' + name)
+                        else:
+                            results.append(f'Can\'t update device {exist_item.get("name")} - {result.get("error")}')
+                    else:
+                        results.append(f'Device with name {name} already exist')
+        return results
+    
+    def rec_merge(self, d1, d2):
+        '''return new merged dict of dicts'''
+        if isinstance(d1, dict):
+            for k, v in d1.items():
+                if k in d2:
+                    d2[k] = self.rec_merge(v, d2[k])
+            d3 = d1.copy()
+            d3.update(d2)
+            return d3
         else:
-            data = {"result": "error", "message": "Failed to add record"}
-        return data
-    
-    # async def update(self, item_id, data):
-    #     result = await self.collection.update_one({'_id': ObjectId(item_id)}, {'$set': data})
-    #     if result.matched_count > 0:
-    #         data = {"result": "success", "message": "Record successfully updated"}
-    #     else:
-    #         data = {"result": "error", "message": "Failed to update record"}
-    #     return data
-    
-    # async def delete(self, item_id=None):
-    #     if item_id is None:
-    #         result = await self.collection.delete_many({})
-    #         return {"result": "success", "message": "All records successfully deleted"}
-    #     result = await self.collection.delete_many({'_id': ObjectId(item_id)})
-    #     if result.deleted_count > 0:
-    #         data = {"result": "success", "message": "Record successfully deleted"}
-    #     else:
-    #         data = {"result": "error", "message": "Failed to delete record"}
-    #     return data
-    
-
+            return d1
