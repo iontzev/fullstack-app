@@ -24,7 +24,6 @@ db.users.insert(
         permissions: {
             superuser: false,
             devices: 'write',
-            users: 'read',
             reports: 'read'
         }
     }

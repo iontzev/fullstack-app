@@ -18,6 +18,21 @@ class DeviceDB():
         })
         return {'status': 'success', 'data': await cursor.to_list(None)}
 
+    async def list_for_import(self, flag_export_passwords):
+        if flag_export_passwords:
+            cursor = self.collection.find({},{
+                '_id': False,
+            })
+        else:
+            cursor = self.collection.find({},{
+                '_id': False,
+                'management.snmp_read_community': False,
+                'management.cli_password': False,
+                'management.cli_enable_password': False,
+            })
+
+        return {'status': 'success', 'data': await cursor.to_list(None)}
+
     async def item(self, item_id):
         try:
             document = await self.collection.find_one(

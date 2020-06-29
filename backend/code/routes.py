@@ -1,5 +1,5 @@
 from controllers.auth import Auth
-from controllers.actions import ImportJson
+from controllers.actions import ImportJson, ExportJson
 from controllers.users import Users, User, Settings
 from controllers.devices import Devices, Device
 
@@ -16,5 +16,5 @@ routes = [
     ('POST', '/device/', Device, 'device_post'),
 
     ('POST', '/import_json', ImportJson, 'import_json_post'),
-    ('GET', '/import_json', ImportJson, 'import_json_get'),
+    ('POST', '/export_json', ExportJson, 'export_json_post'),
 ]

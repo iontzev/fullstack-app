@@ -50,7 +50,34 @@ class ActionsModel():
                     else:
                         results.append(f'Device with name {name} already exist')
         return results
-    
+
+    async def export_json(self, settings):
+        json_data = {
+            'settings': {
+                'replace_item_with_same_name': settings.get('replace_item_with_same_name', True),
+                'delete_all_items_before_upload': settings.get('delete_all_items_before_upload', False)
+            },
+            'default_device': {
+                'vendor': '',
+                'type': 'router',
+                'management': {
+                'protocol': 'ssh',
+                'cli_username': '',
+                }
+            }
+        }
+        flag_export_passwords = settings.get('flag_export_passwords', False)
+        if flag_export_passwords:
+            json_data['default_device']['management']['snmp_read_community'] = ''
+            json_data['default_device']['management']['cli_password'] = ''
+            json_data['default_device']['management']['cli_enable_password'] = ''
+
+        result = await self.base.list_for_import(flag_export_passwords)
+        if result.get('status') == 'success':
+            json_data['devices'] = result.get('data', [])
+        return json_data
+
+
     def rec_merge(self, d1, d2):
         '''return new merged dict of dicts'''
         if isinstance(d1, dict):

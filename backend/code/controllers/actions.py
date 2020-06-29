@@ -6,7 +6,7 @@ from models.auth import permission_required
 
 class ImportJson(web.View):
     # import devices from JSON file to database
-    @permission_required('devices', ['read', 'write'])
+    @permission_required('devices', ['write'])
     async def post(self):
         json_data = await self.request.json()
         actions = ActionsModel(self.request.app)
@@ -14,6 +14,12 @@ class ImportJson(web.View):
 
         return web.json_response(results)
 
-    async def get(self):
-        return web.json_response('{"test": "test"}')
+class ExportJson(web.View):
+    # export devices from database file to JSON
+    @permission_required('devices', ['write'])
+    async def post(self):
+        settings = await self.request.json()
+        actions = ActionsModel(self.request.app)
+        results = await actions.export_json(settings)
 
+        return web.json_response(results)
